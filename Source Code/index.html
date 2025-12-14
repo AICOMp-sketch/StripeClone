@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stripe-style Landing Page (Clone)</title>
+  <meta name="description" content="A Stripe-inspired landing page clone built as a single-page site with Tailwind CSS and JavaScript interactions." />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="styles.css"></link>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-50 selection:bg-indigo-500/30 selection:text-white">
+  <!-- Background layers -->
+  <div aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900"></div>
+    <div class="grid-bg absolute inset-0"></div>
+
+    <div class="blob blob-1 absolute -top-28 -left-24 h-[420px] w-[420px] rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400"></div>
+    <div class="blob blob-2 absolute top-10 right-[-120px] h-[520px] w-[520px] rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-400"></div>
+    <div class="blob blob-3 absolute bottom-[-160px] left-[20%] h-[520px] w-[520px] rounded-full bg-gradient-to-br from-cyan-400 to-emerald-400"></div>
+
+    <div class="absolute inset-0 bg-slate-950/40"></div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed right-4 top-4 z-[60] hidden w-[min(420px,calc(100%-2rem))] rounded-xl border border-white/10 bg-slate-950/90 p-4 shadow-2xl backdrop-blur">
+    <div class="flex items-start gap-3">
+      <div class="mt-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400"></div>
+      <div class="min-w-0">
+        <p id="toastTitle" class="font-semibold">Saved</p>
+        <p id="toastBody" class="mt-0.5 text-sm text-slate-300">Your changes were saved.</p>
+      </div>
+      <button id="toastClose" class="ml-auto rounded-lg p-1.5 text-slate-300 hover:bg-white/5 hover:text-white" aria-label="Close toast">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M6.225 4.811a.75.75 0 0 1 1.06 0L12 9.525l4.715-4.714a.75.75 0 0 1 1.06 1.06L13.06 10.586l4.715 4.714a.75.75 0 1 1-1.06 1.06L12 11.646l-4.715 4.714a.75.75 0 1 1-1.06-1.06l4.715-4.714-4.715-4.714a.75.75 0 0 1 0-1.061Z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="relative z-50">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <a href="#" class="group inline-flex items-center gap-2 rounded-xl px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400/60">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/10 ring-1 ring-white/10">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12.5c0-4.694 3.806-8.5 8.5-8.5S22 7.806 22 12.5 18.194 21 13.5 21 5 17.194 5 12.5Z" stroke="rgba(255,255,255,.9)" stroke-width="1.5"/>
+            <path d="M2 13.2C2 9.223 5.223 6 9.2 6h5.6C18.777 6 22 9.223 22 13.2v.6c0 3.977-3.223 7.2-7.2 7.2H9.2C5.223 21 2 17.777 2 13.8v-.6Z" stroke="rgba(99,102,241,.9)" stroke-width="1.5"/>
+          </svg>
+        </span>
+        <span class="text-sm font-semibold tracking-tight text-white">Stripe Clonee</span>
+        <span class="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-slate-200 ring-1 ring-white/10">demo</span>
+      </a>
+
+      <div class="hidden items-center gap-7 md:flex">
+        <a class="navlink text-sm text-slate-200 hover:text-white" href="#products">Products</a>
+        <a class="navlink text-sm text-slate-200 hover:text-white" href="#developers">Developers</a>
+        <a class="navlink text-sm text-slate-200 hover:text-white" href="#pricing">Pricing</a>
+        <a class="navlink text-sm text-slate-200 hover:text-white" href="#company">Company</a>
+      </div>
+
+      <div class="hidden items-center gap-3 md:flex">
+        <button id="btnSignin" class="rounded-xl px-3 py-2 text-sm text-slate-200 hover:bg-white/5 hover:text-white">Sign in</button>
+        <button id="btnStart" class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-white/10 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/60">Start now</button>
+      </div>
+
+      <button id="btnMenu" class="md:hidden rounded-xl p-2 text-slate-200 hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400/60" aria-label="Open menu" aria-expanded="false">
+        <svg id="iconMenu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path fill-rule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 17.25Z" clip-rule="evenodd" /></svg>
+      </button>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="hidden md:hidden border-t border-white/10 bg-slate-950/60 backdrop-blur">
+      <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div class="grid gap-2">
+          <a class="rounded-xl px-3 py-2 text-sm text-slate-200 hover:bg-white/5 hover:text-white" href="#products">Products</a>
+          <a class="rounded-xl px-3 py-2 text-sm text-slate-200 hover:bg-white/5 hover:text-white" href="#developers">Developers</a>
+          <a class="rounded-xl px-3 py-2 text-sm text-slate-200 hover:bg-white/5 hover:text-white" href="#pricing">Pricing</a>
+          <a class="rounded-xl px-3 py-2 text-sm text-slate-200 hover:bg-white/5 hover:text-white" href="#company">Company</a>
+          <div class="mt-2 flex gap-2">
+            <button id="btnSigninMobile" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10">Sign in</button>
+            <button id="btnStartMobile" class="w-full rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-slate-100">Start now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10">
+    <!-- Hero -->
+    <section class="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8 lg:pt-14">
+      <div class="grid items-center gap-10 lg:grid-cols-2">
+        <div class="reveal">
+          <p class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+            Payments, billing, and embedded finance — in one platform
+          </p>
+          <h1 class="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            Payments infrastructure<br class="hidden sm:block" /> for the internet.
+          </h1>
+          <p class="mt-5 max-w-xl text-base text-slate-200 sm:text-lg">
+            Build a frictionless checkout, manage subscriptions, and move money globally.
+            This is a UI clone for learning and prototyping — not affiliated with Stripe.
+          </p>
+
+          <div class="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button id="btnStartHero" class="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-white/10 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/60">
+              Start now
+            </button>
+            <a href="#developers" class="group inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10">
+              Explore the API
+              <span class="transition-transform group-hover:translate-x-0.5">→</span>
+            </a>
+          </div>
+
+          <dl class="mt-10 grid max-w-xl grid-cols-1 gap-5 sm:grid-cols-3">
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <dt class="text-xs text-slate-300">Uptime</dt>
+              <dd class="mt-1 text-lg font-semibold">99.99%</dd>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <dt class="text-xs text-slate-300">Countries</dt>
+              <dd class="mt-1 text-lg font-semibold">135+</dd>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <dt class="text-xs text-slate-300">Payout speed</dt>
+              <dd class="mt-1 text-lg font-semibold">Instant</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="reveal">
+          <div class="relative">
+            <div class="absolute -inset-1 rounded-[28px] bg-gradient-to-br from-indigo-400/30 via-cyan-400/20 to-fuchsia-400/30 blur"></div>
+            <div class="relative overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/60 shadow-2xl shadow-black/40 backdrop-blur">
+              <div class="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <div class="flex items-center gap-2">
+                  <span class="h-2.5 w-2.5 rounded-full bg-rose-400/80"></span>
+                  <span class="h-2.5 w-2.5 rounded-full bg-amber-300/80"></span>
+                  <span class="h-2.5 w-2.5 rounded-full bg-emerald-400/80"></span>
+                </div>
+                <p class="text-xs text-slate-300">Checkout preview</p>
+              </div>
+
+              <div class="grid gap-0 lg:grid-cols-5">
+                <div class="lg:col-span-3 p-5">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-xs text-slate-300">Order</p>
+                      <p class="mt-1 font-semibold">Starter kit</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-xs text-slate-300">Total</p>
+                      <p class="mt-1 font-semibold">$49.00</p>
+                    </div>
+                  </div>
+
+                  <div class="mt-5 space-y-3">
+                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                      <p class="text-[11px] text-slate-300">Email</p>
+                      <p class="mt-1 text-sm">alex@company.com</p>
+                    </div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                      <p class="text-[11px] text-slate-300">Card</p>
+                      <p class="mt-1 text-sm">4242 4242 4242 4242</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <p class="text-[11px] text-slate-300">Exp</p>
+                        <p class="mt-1 text-sm">12 / 29</p>
+                      </div>
+                      <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <p class="text-[11px] text-slate-300">CVC</p>
+                        <p class="mt-1 text-sm">•••</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button id="btnPay" class="mt-5 w-full rounded-2xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-cyan-200/60">
+                    Pay $49.00
+                  </button>
+
+                  <p class="mt-3 text-center text-[11px] text-slate-400">Secured with tokenization · SCA-ready · PCI simplified</p>
+                </div>
+
+                <div class="lg:col-span-2 border-t border-white/10 lg:border-l lg:border-t-0 p-5">
+                  <p class="text-xs font-semibold text-white/90">Live insights</p>
+                  <p class="mt-1 text-xs text-slate-300">Sample dashboard widgets</p>
+
+                  <div class="mt-4 space-y-3">
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div class="flex items-center justify-between">
+                        <p class="text-xs text-slate-300">Conversion</p>
+                        <p class="text-xs font-semibold text-emerald-300">+3.2%</p>
+                      </div>
+                      <div class="mt-3 h-14 overflow-hidden rounded-xl bg-slate-900/60">
+                        <div class="h-full w-full" aria-hidden="true">
+                          <svg viewBox="0 0 300 80" class="h-full w-full">
+                            <defs>
+                              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0" stop-color="rgba(99,102,241,.95)" />
+                                <stop offset="1" stop-color="rgba(34,211,238,.95)" />
+                              </linearGradient>
+                            </defs>
+                            <path d="M0 60 C35 50, 45 25, 80 35 C115 45, 130 18, 165 30 C200 42, 220 65, 255 50 C275 42, 288 24, 300 26" fill="none" stroke="url(#g1)" stroke-width="4" stroke-linecap="round" />
+                            <path d="M0 80 L0 60 C35 50, 45 25, 80 35 C115 45, 130 18, 165 30 C200 42, 220 65, 255 50 C275 42, 288 24, 300 26 L300 80 Z" fill="rgba(99,102,241,.12)" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div class="flex items-center justify-between">
+                        <p class="text-xs text-slate-300">Payouts</p>
+                        <p class="text-xs font-semibold text-slate-100">$18,240</p>
+                      </div>
+                      <div class="mt-3 grid grid-cols-7 gap-1.5" aria-hidden="true">
+                        <div class="h-10 rounded-lg bg-white/5"></div>
+                        <div class="h-10 rounded-lg bg-white/10"></div>
+                        <div class="h-10 rounded-lg bg-white/15"></div>
+                        <div class="h-10 rounded-lg bg-white/10"></div>
+                        <div class="h-10 rounded-lg bg-white/20"></div>
+                        <div class="h-10 rounded-lg bg-white/10"></div>
+                        <div class="h-10 rounded-lg bg-white/15"></div>
+                      </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p class="text-xs text-slate-300">Risk controls</p>
+                      <div class="mt-2 flex flex-wrap gap-2">
+                        <span class="rounded-full bg-white/5 px-2 py-1 text-[11px] text-slate-200 ring-1 ring-white/10">Radar rules</span>
+                        <span class="rounded-full bg-white/5 px-2 py-1 text-[11px] text-slate-200 ring-1 ring-white/10">3DS2</span>
+                        <span class="rounded-full bg-white/5 px-2 py-1 text-[11px] text-slate-200 ring-1 ring-white/10">Disputes</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logos -->
+      <div class="reveal mt-14">
+        <p class="text-center text-xs uppercase tracking-[0.2em] text-slate-300">Trusted by teams building on the internet</p>
+        <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-slate-200">Acme</div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-slate-200">Juniper</div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-slate-200">Northwind</div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-slate-200">Nova</div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-slate-200">Pioneer</div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-slate-200">Helio</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Products (feature cards) -->
+    <section id="products" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div class="reveal flex flex-col gap-3">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/90">Products</p>
+        <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">A unified platform for money movement</h2>
+        <p class="max-w-2xl text-slate-200">Accept payments, run subscriptions, and embed financial features. Designed to feel like Stripe: clean, fast, and developer-first.</p>
+      </div>
+
+      <div class="mt-10 grid gap-5 lg:grid-cols-3">
+        <article class="reveal rounded-3xl border border-white/10 bg-white/5 p-6 hover:bg-white/7">
+          <div class="flex items-center gap-3">
+            <span class="grid h-10 w-10 place-items-center rounded-2xl bg-indigo-400/20 text-indigo-200 ring-1 ring-indigo-300/20">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M2.25 8.25A3.75 3.75 0 0 1 6 4.5h12A3.75 3.75 0 0 1 21.75 8.25v7.5A3.75 3.75 0 0 1 18 19.5H6a3.75 3.75 0 0 1-3.75-3.75v-7.5Zm3.75-1.5a1.5 1.5 0 0 0-1.5 1.5v.75h16.5v-.75a1.5 1.5 0 0 0-1.5-1.5H6Zm15 5.25H4.5v3.75A1.5 1.5 0 0 0 6 17.25h12a1.5 1.5 0 0 0 1.5-1.5V12Z"/></svg>
+            </span>
+            <div>
+              <h3 class="font-semibold">Payments</h3>
+              <p class="text-sm text-slate-300">A checkout that converts</p>
+            </div>
+          </div>
+          <ul class="mt-5 space-y-2 text-sm text-slate-200">
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Cards, wallets, and local methods</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Fraud checks and 3DS</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Instant payouts and reporting</li>
+          </ul>
+          <a href="#developers" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 hover:text-cyan-100">Read the docs <span>→</span></a>
+        </article>
+
+        <article class="reveal rounded-3xl border border-white/10 bg-white/5 p-6 hover:bg-white/7">
+          <div class="flex items-center gap-3">
+            <span class="grid h-10 w-10 place-items-center rounded-2xl bg-cyan-400/20 text-cyan-200 ring-1 ring-cyan-300/20">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M12 2.25c-2.114 0-3.62 1.683-4.266 3.202-.329.774.063 1.548.796 1.798.785.268 1.512-.084 1.834-.854C10.829 5.201 11.342 4.5 12 4.5s1.171.701 1.636 1.896c.322.77 1.05 1.122 1.834.854.733-.25 1.125-1.024.796-1.798C15.62 3.933 14.114 2.25 12 2.25ZM5.25 10.5A3.75 3.75 0 0 1 9 6.75h6A3.75 3.75 0 0 1 18.75 10.5v7.5A3.75 3.75 0 0 1 15 21.75H9A3.75 3.75 0 0 1 5.25 18v-7.5ZM9 9a1.5 1.5 0 0 0-1.5 1.5V18A1.5 1.5 0 0 0 9 19.5h6a1.5 1.5 0 0 0 1.5-1.5v-7.5A1.5 1.5 0 0 0 15 9H9Z"/></svg>
+            </span>
+            <div>
+              <h3 class="font-semibold">Billing</h3>
+              <p class="text-sm text-slate-300">Subscriptions that scale</p>
+            </div>
+          </div>
+          <ul class="mt-5 space-y-2 text-sm text-slate-200">
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Proration, trials, coupons</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Invoicing & revenue recovery</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Metrics, taxes, receipts</li>
+          </ul>
+          <a href="#pricing" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 hover:text-cyan-100">See pricing <span>→</span></a>
+        </article>
+
+        <article class="reveal rounded-3xl border border-white/10 bg-white/5 p-6 hover:bg-white/7">
+          <div class="flex items-center gap-3">
+            <span class="grid h-10 w-10 place-items-center rounded-2xl bg-fuchsia-400/20 text-fuchsia-200 ring-1 ring-fuchsia-300/20">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path fill-rule="evenodd" d="M12 2.25c-1.03 0-1.9.694-2.16 1.64l-.324 1.19a.75.75 0 0 0 .529.92l.957.26-.42 1.536-1.257-.343a.75.75 0 0 0-.92.529l-.312 1.144A2.25 2.25 0 0 0 9.26 12h1.198l-.598 2.186-1.257-.343a.75.75 0 0 0-.92.529l-.312 1.144a2.25 2.25 0 0 0 1.594 2.758l1.257.343-.42 1.536-.957-.26a.75.75 0 0 0-.92.529l-.324 1.19A2.25 2.25 0 0 0 9.84 24h4.32a2.25 2.25 0 0 0 2.16-1.64l.324-1.19a.75.75 0 0 0-.529-.92l-.957-.26.42-1.536 1.257.343a.75.75 0 0 0 .92-.529l.312-1.144A2.25 2.25 0 0 0 14.74 12h-1.198l.598-2.186 1.257.343a.75.75 0 0 0 .92-.529l.312-1.144A2.25 2.25 0 0 0 15.04 5.73l-1.257-.343.42-1.536.957.26a.75.75 0 0 0 .92-.529l.324-1.19A2.25 2.25 0 0 0 14.16 2.25H12Zm-.815 9.75.77-2.814h1.09l-.77 2.814h-1.09Zm1.63 1.5h-1.09l-.77 2.814h1.09l.77-2.814Z" clip-rule="evenodd"/></svg>
+            </span>
+            <div>
+              <h3 class="font-semibold">Connect</h3>
+              <p class="text-sm text-slate-300">Embedded payments for platforms</p>
+            </div>
+          </div>
+          <ul class="mt-5 space-y-2 text-sm text-slate-200">
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Onboard sellers fast</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Split payments automatically</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Multi-party compliance tools</li>
+          </ul>
+          <a href="#company" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 hover:text-cyan-100">Learn more <span>→</span></a>
+        </article>
+      </div>
+
+      <!-- Product tabs -->
+      <div class="reveal mt-14 rounded-3xl border border-white/10 bg-white/5 p-6 lg:p-8">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200/90">Platform</p>
+            <h3 class="mt-2 text-2xl font-semibold tracking-tight">Everything works together</h3>
+            <p class="mt-2 max-w-2xl text-slate-200">Switch tabs to preview how a single API surface can power payments, subscriptions, and marketplaces.</p>
+          </div>
+          <div class="flex flex-wrap gap-2" role="tablist" aria-label="Product preview tabs">
+            <button class="tabbtn rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white" data-tab="payments" role="tab" aria-selected="true">Payments</button>
+            <button class="tabbtn rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10" data-tab="billing" role="tab" aria-selected="false">Billing</button>
+            <button class="tabbtn rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10" data-tab="connect" role="tab" aria-selected="false">Connect</button>
+          </div>
+        </div>
+
+        <div class="mt-8 grid gap-6 lg:grid-cols-2">
+          <div id="tabCopy" class="space-y-4">
+            <!-- JS fills this -->
+          </div>
+
+          <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-950/50">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-cyan-500/5 to-fuchsia-500/10"></div>
+            <div class="relative p-6">
+              <p class="text-xs text-slate-300">Event stream</p>
+              <div class="mt-4 space-y-3">
+                <div class="eventRow rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold">payment_intent.succeeded</p>
+                    <p class="text-xs text-slate-300">now</p>
+                  </div>
+                  <p class="mt-1 text-xs text-slate-300">pi_3N... · amount: 4900 · currency: usd</p>
+                </div>
+                <div class="eventRow rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold">invoice.finalized</p>
+                    <p class="text-xs text-slate-300">2m</p>
+                  </div>
+                  <p class="mt-1 text-xs text-slate-300">in_1P... · customer: cus_J... · total: 12000</p>
+                </div>
+                <div class="eventRow rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold">account.updated</p>
+                    <p class="text-xs text-slate-300">7m</p>
+                  </div>
+                  <p class="mt-1 text-xs text-slate-300">acct_1K... · payouts_enabled: true</p>
+                </div>
+              </div>
+
+              <div class="mt-5 flex flex-wrap gap-2">
+                <span class="rounded-full bg-white/5 px-2 py-1 text-[11px] text-slate-200 ring-1 ring-white/10">Webhooks</span>
+                <span class="rounded-full bg-white/5 px-2 py-1 text-[11px] text-slate-200 ring-1 ring-white/10">Idempotency</span>
+                <span class="rounded-full bg-white/5 px-2 py-1 text-[11px] text-slate-200 ring-1 ring-white/10">Retries</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Developers (API) -->
+    <section id="developers" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div class="reveal grid gap-10 lg:grid-cols-2 lg:items-start">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/90">Developers</p>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Designed for builders</h2>
+          <p class="mt-4 max-w-xl text-slate-200">Clean primitives, predictable APIs, and great defaults. Toggle languages and copy the snippet.</p>
+
+          <div class="mt-8 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+              <p class="text-sm font-semibold">Idempotent requests</p>
+              <p class="mt-1 text-sm text-slate-300">Safe retries for flaky networks and mobile clients.</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+              <p class="text-sm font-semibold">Webhooks</p>
+              <p class="mt-1 text-sm text-slate-300">Event-driven architecture with signature verification.</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+              <p class="text-sm font-semibold">Test mode</p>
+              <p class="mt-1 text-sm text-slate-300">Deterministic test cards and simulated failures.</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+              <p class="text-sm font-semibold">Typed SDKs</p>
+              <p class="mt-1 text-sm text-slate-300">Autocomplete-friendly clients for popular languages.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal">
+          <div class="rounded-3xl border border-white/10 overflow-hidden">
+            <div class="flex flex-wrap items-center gap-2 border-b border-white/10 bg-slate-950/60 px-4 py-3">
+              <div class="flex items-center gap-2" role="tablist" aria-label="Language tabs">
+                <button class="codeTab rounded-xl bg-white/10 px-3 py-1.5 text-xs font-semibold text-white" data-lang="node" aria-selected="true">Node</button>
+                <button class="codeTab rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/10" data-lang="python" aria-selected="false">Python</button>
+                <button class="codeTab rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/10" data-lang="ruby" aria-selected="false">Ruby</button>
+              </div>
+              <div class="ml-auto flex items-center gap-2">
+                <button id="btnCopy" class="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-100 hover:bg-white/10">Copy</button>
+                <a href="#pricing" class="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-100 hover:bg-white/10">Pricing</a>
+              </div>
+            </div>
+
+            <div class="code-bg p-4 sm:p-5">
+              <pre class="overflow-x-auto text-xs leading-relaxed text-slate-100"><code id="codeBlock"></code></pre>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p class="text-sm font-semibold">Try a mock payment</p>
+                <p class="text-sm text-slate-300">Simulates a successful intent and shows a toast.</p>
+              </div>
+              <button id="btnSimulate" class="rounded-2xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-cyan-200/60">
+                Simulate
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div class="reveal flex flex-col gap-3">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-200/90">Pricing</p>
+        <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Transparent, usage-friendly pricing</h2>
+        <p class="max-w-2xl text-slate-200">A clone-style pricing layout with a monthly/annual toggle. Values are illustrative.</p>
+      </div>
+
+      <div class="reveal mt-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div class="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-2">
+          <button id="toggleMonthly" class="priceToggle rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950" aria-pressed="true">Monthly</button>
+          <button id="toggleAnnual" class="priceToggle rounded-xl px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10" aria-pressed="false">Annual <span class="ml-1 text-xs text-emerald-300">-15%</span></button>
+        </div>
+        <p class="text-sm text-slate-300">Need enterprise SLAs? <a href="#company" class="font-semibold text-cyan-200 hover:text-cyan-100">Contact sales</a>.</p>
+      </div>
+
+      <div class="mt-10 grid gap-5 lg:grid-cols-3">
+        <article class="reveal rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h3 class="text-sm font-semibold text-slate-100">Starter</h3>
+          <p class="mt-2 text-sm text-slate-300">For prototypes and side projects.</p>
+          <p class="mt-5 text-4xl font-semibold" data-price="starter">$29</p>
+          <p class="mt-1 text-sm text-slate-300" data-period="starter">per month</p>
+          <ul class="mt-6 space-y-2 text-sm text-slate-200">
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> 50k API requests</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Basic fraud screening</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Email support</li>
+          </ul>
+          <button class="mt-6 w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-slate-100" data-open="signup">Choose Starter</button>
+        </article>
+
+        <article class="reveal relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-6">
+          <div class="absolute -top-3 left-6 inline-flex items-center rounded-full bg-gradient-to-r from-indigo-400 to-cyan-300 px-3 py-1 text-xs font-semibold text-slate-950">Most popular</div>
+          <h3 class="text-sm font-semibold text-slate-100">Growth</h3>
+          <p class="mt-2 text-sm text-slate-300">For production apps with real volume.</p>
+          <p class="mt-5 text-4xl font-semibold" data-price="growth">$79</p>
+          <p class="mt-1 text-sm text-slate-300" data-period="growth">per month</p>
+          <ul class="mt-6 space-y-2 text-sm text-slate-200">
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> 500k API requests</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Advanced rules + webhooks</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Priority support</li>
+          </ul>
+          <button class="mt-6 w-full rounded-2xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 hover:brightness-105" data-open="signup">Choose Growth</button>
+        </article>
+
+        <article class="reveal rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h3 class="text-sm font-semibold text-slate-100">Enterprise</h3>
+          <p class="mt-2 text-sm text-slate-300">Custom pricing and compliance controls.</p>
+          <p class="mt-5 text-4xl font-semibold" data-price="enterprise">$199</p>
+          <p class="mt-1 text-sm text-slate-300" data-period="enterprise">per month</p>
+          <ul class="mt-6 space-y-2 text-sm text-slate-200">
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Unlimited API requests</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> SSO + audit logs</li>
+            <li class="flex gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> SLAs + dedicated support</li>
+          </ul>
+          <button class="mt-6 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10" data-open="contact">Contact sales</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div class="reveal flex items-end justify-between gap-6">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/90">Stories</p>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Teams ship faster</h2>
+          <p class="mt-3 max-w-2xl text-slate-200">A lightweight slider that mimics Stripe-style social proof.</p>
+        </div>
+        <div class="hidden sm:flex items-center gap-2">
+          <button id="prevTest" class="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-100 hover:bg-white/10" aria-label="Previous testimonial">←</button>
+          <button id="nextTest" class="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-100 hover:bg-white/10" aria-label="Next testimonial">→</button>
+        </div>
+      </div>
+
+      <div class="reveal mt-10 grid gap-5 lg:grid-cols-3" id="testimonials">
+        <!-- JS renders cards -->
+      </div>
+
+      <div class="mt-6 flex sm:hidden items-center gap-2">
+        <button id="prevTestMobile" class="w-full rounded-xl border border-white/10 bg-white/5 p-2 text-slate-100 hover:bg-white/10">Previous</button>
+        <button id="nextTestMobile" class="w-full rounded-xl border border-white/10 bg-white/5 p-2 text-slate-100 hover:bg-white/10">Next</button>
+      </div>
+    </section>
+
+    <!-- Company / CTA -->
+    <section id="company" class="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+      <div class="reveal relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 sm:p-10">
+        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-cyan-500/5 to-fuchsia-500/10"></div>
+        <div class="relative grid gap-8 lg:grid-cols-5 lg:items-center">
+          <div class="lg:col-span-3">
+            <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Move fast — without breaking payments</h2>
+            <p class="mt-3 max-w-2xl text-slate-200">Use this clone layout as a starting point for your own landing pages. Includes tabs, toggles, modals, and accessibility-friendly patterns.</p>
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button class="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-slate-100" data-open="signup">Create your account</button>
+              <a href="#developers" class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10">View API examples</a>
+            </div>
+          </div>
+          <div class="lg:col-span-2">
+            <div class="rounded-3xl border border-white/10 bg-slate-950/50 p-5">
+              <p class="text-xs font-semibold text-white/90">Quick checklist</p>
+              <ul class="mt-3 space-y-2 text-sm text-slate-200">
+                <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Mobile-first layout</li>
+                <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Copy-to-clipboard code</li>
+                <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Pricing toggle</li>
+                <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Modal + toast patterns</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="mt-12 border-t border-white/10 pt-10">
+        <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p class="text-sm font-semibold">Stripe Clonee</p>
+            <p class="mt-2 text-sm text-slate-300">Single-page demo UI inspired by Stripe. No affiliation.</p>
+          </div>
+          <div>
+            <p class="text-sm font-semibold">Product</p>
+            <ul class="mt-3 space-y-2 text-sm text-slate-300">
+              <li><a class="hover:text-white" href="#products">Payments</a></li>
+              <li><a class="hover:text-white" href="#products">Billing</a></li>
+              <li><a class="hover:text-white" href="#products">Connect</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-sm font-semibold">Developers</p>
+            <ul class="mt-3 space-y-2 text-sm text-slate-300">
+              <li><a class="hover:text-white" href="#developers">API</a></li>
+              <li><a class="hover:text-white" href="#developers">Webhooks</a></li>
+              <li><a class="hover:text-white" href="#developers">SDKs</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-sm font-semibold">Company</p>
+            <ul class="mt-3 space-y-2 text-sm text-slate-300">
+              <li><a class="hover:text-white" href="#company">About</a></li>
+              <li><a class="hover:text-white" href="#pricing">Pricing</a></li>
+              <li><button class="hover:text-white" data-open="contact">Contact</button></li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-10 flex flex-col gap-2 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-xs text-slate-400">© <span id="year"></span> Stripe Clonee. Built with Tailwind CDN.</p>
+          <div class="flex gap-4 text-xs text-slate-400">
+            <a href="#" class="hover:text-white">Privacy</a>
+            <a href="#" class="hover:text-white">Terms</a>
+            <a href="#" class="hover:text-white">Status</a>
+          </div>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Modal overlay -->
+  <div id="modalOverlay" class="fixed inset-0 z-[70] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/70 backdrop-blur" data-close="overlay"></div>
+
+    <div role="dialog" aria-modal="true" aria-labelledby="modalTitle" class="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-slate-950/90 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 px-5 py-4">
+        <div>
+          <p class="text-xs text-slate-300" id="modalKicker">Get started</p>
+          <h3 class="mt-1 text-lg font-semibold" id="modalTitle">Create your account</h3>
+        </div>
+        <button id="modalClose" class="rounded-xl p-2 text-slate-300 hover:bg-white/5 hover:text-white" aria-label="Close modal">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M6.225 4.811a.75.75 0 0 1 1.06 0L12 9.525l4.715-4.714a.75.75 0 0 1 1.06 1.06L13.06 10.586l4.715 4.714a.75.75 0 1 1-1.06 1.06L12 11.646l-4.715 4.714a.75.75 0 1 1-1.06-1.06l4.715-4.714-4.715-4.714a.75.75 0 0 1 0-1.061Z"/></svg>
+        </button>
+      </div>
+
+      <form id="modalForm" class="p-5">
+        <div class="grid gap-4">
+          <label class="grid gap-1.5">
+            <span class="text-sm font-semibold">Work email</span>
+            <input id="email" type="email" required placeholder="name@company.com" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/60" />
+          </label>
+
+          <label class="grid gap-1.5">
+            <span class="text-sm font-semibold">Country</span>
+            <select id="country" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-400/60">
+              <option value="US">United States</option>
+              <option value="GB">United Kingdom</option>
+              <option value="CA">Canada</option>
+              <option value="DE">Germany</option>
+              <option value="IN">India</option>
+              <option value="BR">Brazil</option>
+            </select>
+          </label>
+
+          <label class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <input id="updates" type="checkbox" class="mt-1 h-4 w-4 rounded border-white/20 bg-white/10" />
+            <span class="text-sm text-slate-200">Send me product updates (optional)</span>
+          </label>
+
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <button type="submit" class="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-slate-100">Continue</button>
+            <button type="button" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10" data-open="contact">Talk to sales</button>
+          </div>
+
+          <p class="text-xs text-slate-400">This demo does not create real accounts. It only shows UI behavior.</p>
+        </div>
+      </form>
+
+      <div id="contactPanel" class="hidden p-5">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p class="text-sm font-semibold">Contact sales</p>
+          <p class="mt-1 text-sm text-slate-300">Tell us about your integration needs and we’ll respond within 1–2 business days (demo).</p>
+          <div class="mt-4 grid gap-3">
+            <label class="grid gap-1.5">
+              <span class="text-sm font-semibold">Company</span>
+              <input id="company" type="text" placeholder="Acme Inc." class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/60" />
+            </label>
+            <label class="grid gap-1.5">
+              <span class="text-sm font-semibold">Message</span>
+              <textarea id="message" rows="4" placeholder="What are you building?" class="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/60"></textarea>
+            </label>
+            <div class="flex gap-2">
+              <button id="btnSend" class="w-full rounded-2xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 hover:brightness-105">Send</button>
+              <button id="btnBack" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10">Back</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
