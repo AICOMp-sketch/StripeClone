@@ -1,0 +1,39 @@
+
+    :root { color-scheme: light; }
+
+    /* Soft grid backdrop */
+    .grid-bg {
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+      background-position: center;
+      mask-image: radial-gradient(ellipse at top, rgba(0,0,0,0.9), rgba(0,0,0,0.25) 55%, transparent 75%);
+    }
+
+    /* Animated gradient blobs */
+    .blob { filter: blur(36px); opacity: .55; transform: translate3d(0,0,0); }
+    @keyframes drift {
+      0% { transform: translate(-6%, -6%) scale(1); }
+      33% { transform: translate(6%, -2%) scale(1.05); }
+      66% { transform: translate(2%, 6%) scale(0.98); }
+      100% { transform: translate(-6%, -6%) scale(1); }
+    }
+    .blob-1 { animation: drift 18s ease-in-out infinite; }
+    .blob-2 { animation: drift 22s ease-in-out infinite reverse; }
+    .blob-3 { animation: drift 26s ease-in-out infinite; }
+
+    /* Reveal animations */
+    .reveal { opacity: 0; transform: translateY(10px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    /* Subtle code highlight */
+    .code-bg {
+      background: radial-gradient(1200px 500px at 30% 10%, rgba(99,102,241,0.18), transparent 55%),
+                  radial-gradient(900px 450px at 70% 10%, rgba(14,165,233,0.18), transparent 55%),
+                  rgba(2,6,23,0.95);
+    }
+
+    /* Smooth scrolling */
+    html { scroll-behavior: smooth; }
+ 
